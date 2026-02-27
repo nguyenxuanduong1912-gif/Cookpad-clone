@@ -1,0 +1,43 @@
+@import "@fontsource/poppins/400.css";
+@import "@fontsource/poppins/600.css";
+@import "@fontsource/poppins/700.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  @apply text-[62.5%];
+}
+body {
+  @apply bg-[#f8f6f2];
+  @apply font-display;
+  @apply font-medium;
+  @apply text-[1.6rem];
+  @apply box-border;
+}
+
+@layer utilities {
+  div[role="button"] {
+    @apply h-[48px];
+  }
+  .font-display {
+    font-family: "Poppins", sans-serif;
+  }
+  @layer utilities {
+    .scrollbar-hide {
+      -ms-overflow-style: none; /* IE và Edge */
+      scrollbar-width: none; /* Firefox */
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  }
+}
