@@ -38,6 +38,9 @@ export default {
         slideDown: "slideDown 0.5s ease-out forwards",
         rotate: "rotate 1s ease-out forwards infinite",
       },
+      shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        },
     },
   },
   plugins: [],

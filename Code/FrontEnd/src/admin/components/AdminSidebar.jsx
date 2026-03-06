@@ -24,11 +24,6 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
     },
     { label: "Người dùng", path: "/admin/users", icon: <Users size={18} /> },
     { label: "Danh mục", path: "/admin/categories", icon: <Users size={18} /> },
-    {
-      label: "Bình luận",
-      path: "/admin/comments",
-      icon: <MessageSquare size={18} />,
-    },
   ];
 
   return (

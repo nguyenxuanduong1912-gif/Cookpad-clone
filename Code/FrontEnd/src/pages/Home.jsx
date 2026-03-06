@@ -1,29 +1,30 @@
 import axiosClient from "../api/axiosClient";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState, useContext } from "react";
+import { Modal } from "@mui/material";
+import { Link, useOutletContext, useNavigate } from "react-router-dom";
+import Tippy from "@tippyjs/react/headless";
+import "tippy.js/dist/tippy.css";
+import { toast } from "react-toastify";
+
 import Button from "../components/Button";
 import TrendingCard from "../components/TrendingCard";
 import Title from "../components/Title";
 import RecentlyView from "../components/RecentlyView";
 import RecipeCard from "../components/RecipeCard";
-import { Modal } from "@mui/material";
-import { Link, useOutletContext } from "react-router-dom";
 import SearchRecentlyCard from "../components/SearchRecentlyCard";
 import RecipeTag from "../components/RecipeTag";
-import Tippy from "@tippyjs/react/headless";
-import "tippy.js/dist/tippy.css";
 import LoginCard from "../components/LoginCard";
-import { useContext } from "react";
-import { HistoryContext } from "../context/HistoryContext";
-import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { userContext } from "../context/UserContext";
 import SurveyModal from "../components/SurveyModal";
 import RecipeSearchResult from "../components/RecipeSearchResult";
 import SearchSuggestionDropdown from "../components/SearchSuggestionDropdown";
 import MinimalIngredientSuggestion from "../components/MinimalIngredientSuggestion";
 import CategoryGroupDropdown from "../components/CategoryGroupDropdown";
 import SmartIngredientInput from "../components/SmartIngredientInput";
+import CategoryListSkeleton from "../components/CategoryListSkeleton";
+import RecentlyViewedList from "../components/RecentlyViewedList";
+
+import { HistoryContext } from "../context/HistoryContext";
+import { userContext } from "../context/UserContext";
 
 function Home() {
   const [searchResults, setSearchResults] = useState([]);
@@ -32,7 +33,9 @@ function Home() {
   const [visible, setVisible] = useState(false);
   const [visible2, setVisible2] = useState(false);
   const [searchTrending, setSearchTrending] = useState();
+  const [isLoadingCategory, setIsLoadingCategory] = useState(false);
   const [recentView, setRecentview] = useState([]);
+  const [isLoadingRecentView, setIsloadingRecentView] = useState(false);
   const [recentSearch, setRecentSearch] = useState([]);
   const [reset, setReset] = useState(false);
   const { user, setUser } = useContext(userContext);
@@ -48,31 +51,26 @@ function Home() {
 
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  // const [openHistory, setOpenHistory] = useState(false);
   const [openLogin, setOpenLogin] = useState(false);
   const { openHistory, setOpenHistory } = useContext(HistoryContext);
   const { primaryInput, setPrimaryInput, dataSuggest, setDataSuggest } =
     useOutletContext();
-  // File: Home.jsx (Thay thế khối useEffect tìm kiếm theo primaryInput)
 
   useEffect(() => {
     const input = primaryInput.trim();
     let isMounted = true;
 
-    // Thoát ngay lập tức nếu input rỗng
     if (input === "") {
       setSearchResults([]);
       setVisible2(false);
-      setLoading(false); // Đảm bảo loading tắt khi input rỗng
+      setLoading(false);
       return;
     }
 
-    // 1. Thiết lập Debounce
     const delayDebounceFn = setTimeout(async () => {
-      // Bắt đầu quá trình tìm kiếm sau khi hết thời gian debounce
       if (isMounted) {
         setLoading(true);
-        setVisible2(false); // Ẩn kết quả cũ
+        setVisible2(false);
       }
 
       try {
@@ -81,7 +79,6 @@ function Home() {
           .map((item) => item.trim())
           .filter((i) => i.length > 0);
 
-        // Nếu không có nguyên liệu hợp lệ sau khi làm sạch, dừng lại
         if (ingredients.length === 0) {
           if (isMounted) {
             setSearchResults([]);
@@ -90,16 +87,13 @@ function Home() {
           return;
         }
 
-        // 2. Gọi API tìm kiếm chính
         const res = await axiosClient.post("/recipes/search-by-ingredients", {
           userId: user?.id,
           ingredients,
         });
 
-        // 3. Cập nhật state nếu component vẫn còn mounted
         if (isMounted) {
           setSearchResults(res.data.recipes);
-          // Chỉ hiển thị kết quả nếu có data
           setVisible2(true);
         }
       } catch (error) {
@@ -109,28 +103,28 @@ function Home() {
           setVisible2(false);
         }
       } finally {
-        // 4. Kết thúc loading
         if (isMounted) {
           setLoading(false);
         }
       }
-    }, 400); // ⬅️ Độ trễ 300ms
+    }, 400);
 
-    // 5. Cleanup function: Chạy trước khi useEffect chạy lại hoặc component unmount
     return () => {
-      isMounted = false; // Vô hiệu hóa request cũ
-      clearTimeout(delayDebounceFn); // Hủy bộ đếm thời gian debounce cũ
+      isMounted = false;
+      clearTimeout(delayDebounceFn);
     };
-    // Thêm các dependencies cần thiết
   }, [primaryInput, user, setLoading, setSearchResults, setVisible2]);
+
   const handleSearch = (keyword) => {
     setPrimaryInput(keyword);
     navigate(`/search?keyword=${primaryInput}`);
     setVisible(false);
   };
+
   const handleClose = () => {
     setIsOpen(false);
   };
+
   const handleSubmitSurvey = async (formData) => {
     try {
       const res = await axiosClient.post("/accounts/preferences", {
@@ -142,7 +136,10 @@ function Home() {
       console.log(res.data.message);
     } catch (error) {}
   };
+
   useEffect(() => {
+    setIsLoadingCategory(true);
+    setIsloadingRecentView(true);
     const getRecipes = async () => {
       try {
         const res = await axiosClient.get("/recipes", {
@@ -151,7 +148,6 @@ function Home() {
           },
         });
         const res2 = await axiosClient.get("/recipes/categories");
-        console.log(res2.data);
         if (user) {
           const res3 = await axiosClient.get("/recipes/recent-views");
           const res4 = await axiosClient.get("/search/history");
@@ -159,12 +155,14 @@ function Home() {
           setIsOpen(!res5?.data?.user?.healthPreferences?.surveyCompleted);
           setRecentview(res3.data);
           setRecentSearch(res4.data);
+          setIsloadingRecentView(false);
         } else {
           setIsOpen(false);
         }
         setReset(false);
         setSearchTrending(res2.data);
         setRecipes(res.data.recipes || []);
+        setIsLoadingCategory(false);
       } catch (error) {
         console.error("Lỗi khi lấy recipes:", error);
       }
@@ -172,7 +170,7 @@ function Home() {
 
     getRecipes();
   }, [reset, user]);
-  // Lấy danh sách món đã xem gần đây
+
   const loadRecentViews = async () => {
     try {
       const res = await axiosClient.get("/recipes/recent-views");
@@ -182,7 +180,6 @@ function Home() {
     }
   };
 
-  // Xóa 1 món khỏi danh sách xem gần đây
   const deleteOneRecentView = async (recipeId) => {
     try {
       await axiosClient.delete("/recipes/recent-view", {
@@ -198,11 +195,9 @@ function Home() {
     }
   };
 
-  // Xóa toàn bộ danh sách xem gần đây
   const deleteAllRecentViews = async () => {
     try {
       await axiosClient.delete("/recipes/recent-views");
-
       setRecentview({ recipes: [] });
     } catch (err) {
       console.log(err);
@@ -211,186 +206,45 @@ function Home() {
 
   return (
     <>
-      {/* <SurveyModal
-        isOpen={isOpen}
-        handleClose={handleClose}
-        handleSubmitSurvey={handleSubmitSurvey}
-      /> */}
       <main className="text-[#606060]">
-        <div className="px-[16px] mx-[40px]">
-          {/* <div className="w-full mt-[75px] rounded-[6px] bg-[#81b000] p-[8px] flex items-center">
-            <p className="m-auto text-white text-center">
-              Đăng xuất thành công? Hẹn gặp lại
-            </p>
-            <Link>
-              <img src="close.svg" alt="" className="" />
-            </Link>
-          </div> */}
-
-          <div className="my-[56px] flex flex-col items-center gap-[24px] pt-[56px]">
+        <div className="px-4 md:px-10 max-w-[1280px] mx-auto">
+          <div className="my-8 md:my-14 flex flex-col items-center gap-6 pt-10 md:pt-14">
             <img
               src="logo_cookpad.png"
               alt=""
-              className="w-[224px] h-[61px] object-contain"
+              className="w-40 md:w-56 h-auto object-contain"
             />
 
-            {/* GỢI Ý MÓN THEO NGUYÊN LIỆU (UI MỚI) */}
-            <div className="w-full flex justify-center mt-6">
+            <div className="w-full flex justify-center mt-4 md:mt-6">
               <SmartIngredientInput />
             </div>
+
             <section className="w-full">
-              <div>
-                {/* <div className="text-[#4a4a4a] flex items-center justify-between mb-[16px]">
-                  <h1 className="text-[1.8rem] font-semibold">
-                    Từ khóa thịnh hành
-                  </h1>
-                  <span className="text-[1.2rem]">Cập nhật 04:28</span>
-                </div> */}
+              <Title text={"Danh mục món ăn"} time={""} />
+              {isLoadingCategory && <CategoryListSkeleton />}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+                {searchTrending?.categories?.length > 0 &&
+                  searchTrending.categories.slice(0, 8).map((s, index) => (
+                    <TrendingCard
+                      key={index}
+                      text={s.name}
+                      src={s.image}
+                      href={`/category/${s._id}`}
+                    />
+                  ))}
+              </div>
 
-                <Title text={"Danh mục món ăn"} time={""} />
-                <div className="grid grid-cols-4 gap-x-[16px] gap-y-[8px] mb-[24px]">
-                  {searchTrending?.categories?.length > 0 &&
-                    searchTrending.categories
-                      .slice(0, 8)
-                      .map((s, index) => (
-                        <TrendingCard
-                          text={s.name}
-                          src={s.image}
-                          href={`/category/${s._id}`}
-                        />
-                      ))}
-                  {/* 
-                  <TrendingCard
-                    text={"Thực đơn món ngon mỗi ngày"}
-                    src={
-                      "https://img-global.cpcdn.com/recipes/ccda21675c3ae602/560x192cq50/photo.webp"
-                    }
-                  />
-                  <TrendingCard
-                    text={"Cá"}
-                    src={
-                      "https://img-global.cpcdn.com/recipes/c9e71403ea8a4fea/560x192cq50/photo.webp"
-                    }
-                  />
-                  <TrendingCard
-                    text={"Bánh"}
-                    src={
-                      "https://img-global.cpcdn.com/recipes/3129e01e8e16efe3/560x192f0.502029_0.5_1.0q50/photo.webp"
-                    }
-                  />
-                  <TrendingCard
-                    text={"Trứng"}
-                    src={
-                      "https://img-global.cpcdn.com/recipes/1cf68e76e462eb8c/560x192f0.500306_0.5_1.0q50/photo.webp"
-                    }
-                  />
-                  <TrendingCard
-                    text={"Đậu hũ"}
-                    src={
-                      "https://img-global.cpcdn.com/recipes/af4a00ea96579b35/560x192cq50/photo.webp"
-                    }
-                  />
-                  <TrendingCard
-                    text={"Ức gà sốt"}
-                    src={
-                      "https://img-global.cpcdn.com/recipes/8349e5d53c3f7298/560x192f0.5_0.500105_1.0q50/photo.webp"
-                    }
-                  />
-                  <TrendingCard
-                    text={"Lá lốt"}
-                    src={
-                      "https://img-global.cpcdn.com/recipes/add2d6160ccdf800/560x192cq50/photo.webp"
-                    }
-                  /> */}
-                </div>
-                <Modal open={visible} onClose={() => setVisible(false)}>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-[24px] rounded-[8px] w-[600px] max-h-[80vh] overflow-y-auto">
-                    <h2 className="text-[1.8rem] font-semibold mb-[16px]">
-                      Món bạn mới xem gần đây
-                    </h2>
+              {isLoadingRecentView && <RecentlyViewedList />}
 
-                    {recentView?.recipes?.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-[16px]">
-                        {recentView.recipes.map((r, index) => (
-                          <RecentlyView
-                            key={index}
-                            src={r.image}
-                            avatar={r?.author?.avatar}
-                            name={r?.author?.fullName}
-                            decription={r.name}
-                            href={`/recipes/${r._id}`}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <p>Không có món nào gần đây.</p>
-                    )}
-                  </div>
-                </Modal>
-                <Modal open={open} onClose={() => setOpen(false)}>
-                  <div
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                  bg-[#f6f2ea] w-[420px] max-h-[80vh] p-[24px] rounded-[12px] 
-                  shadow-lg overflow-y-auto"
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-[16px]">
-                      <h2 className="text-[1.8rem] font-semibold text-[#4a4a4a]">
-                        Tìm kiếm gần đây của bạn
-                      </h2>
-                      <button onClick={() => setOpen(false)}>
-                        <img src="close.svg" alt="close" className="w-[20px]" />
-                      </button>
-                    </div>
+              <Modal open={visible} onClose={() => setVisible(false)}>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg w-[90%] md:w-[600px] max-h-[80vh] overflow-y-auto">
+                  <h2 className="text-xl md:text-3xl font-semibold mb-4 text-[#4a4a4a]">
+                    Món bạn mới xem gần đây
+                  </h2>
 
-                    {/* Danh sách lịch sử */}
-                    <div className="flex flex-col gap-[12px]">
-                      {recentSearch?.history?.length > 0 ? (
-                        recentSearch.history.map((item, index) => (
-                          <div
-                            key={index}
-                            className="bg-white rounded-[8px] p-[12px] flex justify-between items-center 
-                      shadow-sm border border-[#e5e5e5]"
-                          >
-                            <div>
-                              <p className="text-[1.4rem] font-semibold">
-                                {item.keyword}
-                              </p>
-                              <p className="text-[1.2rem] text-[#888]">
-                                {item.timeAgo}
-                              </p>
-                            </div>
-
-                            <button
-                              onClick={() => console.log("delete history")}
-                            >
-                              <img src="close.svg" className="w-[18px]" />
-                            </button>
-                          </div>
-                        ))
-                      ) : (
-                        <p>Không có lịch sử tìm kiếm gần đây.</p>
-                      )}
-                    </div>
-                  </div>
-                </Modal>
-
-                {recentView?.recipes?.length > 0 && (
-                  <Title
-                    text={"Món bạn mới xem gần đây"}
-                    arrow="arrow.svg"
-                    handleOnCLick={() => {
-                      setVisible(true);
-                      console.log(visible);
-                    }}
-                  />
-                )}
-
-                <div className="grid grid-cols-6 gap-[16px]">
-                  {recentView?.recipes?.length > 0 &&
-                    recentView.recipes
-                      .slice(0, 6)
-                      .map((r, index) => (
+                  {recentView?.recipes?.length > 0 && !isLoadingRecentView ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {recentView.recipes.map((r, index) => (
                         <RecentlyView
                           key={index}
                           src={r.image}
@@ -400,42 +254,95 @@ function Home() {
                           href={`/recipes/${r._id}`}
                         />
                       ))}
+                    </div>
+                  ) : (
+                    <p>Không có món nào gần đây.</p>
+                  )}
                 </div>
+              </Modal>
+
+              <Modal open={open} onClose={() => setOpen(false)}>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#f6f2ea] w-[90%] md:w-[420px] max-h-[80vh] p-6 rounded-xl shadow-lg overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl md:text-2xl font-semibold text-[#4a4a4a]">
+                      Tìm kiếm gần đây
+                    </h2>
+                    <button onClick={() => setOpen(false)}>
+                      <img src="close.svg" alt="close" className="w-5" />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    {recentSearch?.history?.length > 0 ? (
+                      recentSearch.history.map((item, index) => (
+                        <div
+                          key={index}
+                          className="bg-white rounded-lg p-3 flex justify-between items-center shadow-sm border border-[#e5e5e5]"
+                        >
+                          <div>
+                            <p className="text-sm md:text-base font-semibold">
+                              {item.keyword}
+                            </p>
+                            <p className="text-xs text-[#888]">{item.timeAgo}</p>
+                          </div>
+                          <button onClick={() => console.log("delete history")}>
+                            <img src="close.svg" className="w-4" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p>Không có lịch sử tìm kiếm gần đây.</p>
+                    )}
+                  </div>
+                </div>
+              </Modal>
+
+              {recentView?.recipes?.length > 0 && (
+                <Title
+                  text={"Món bạn mới xem gần đây"}
+                  arrow="arrow.svg"
+                  handleOnCLick={() => setVisible(true)}
+                />
+              )}
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+                {recentView?.recipes?.length > 0 &&
+                  recentView.recipes.slice(0, 6).map((r, index) => (
+                    <RecentlyView
+                      key={index}
+                      src={r.image}
+                      avatar={r?.author?.avatar}
+                      name={r?.author?.fullName}
+                      decription={r.name}
+                      href={`/recipes/${r._id}`}
+                    />
+                  ))}
               </div>
-              <div className="my-[24px]">
+
+              <div className="my-6 md:my-8">
                 <Title text={"Gói Premium"} icon={"premium2.svg"} />
               </div>
 
-              <div className="grid grid-cols-3 gap-[16px] mb-[24px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 md:mb-8">
                 <RecipeCard
-                  src={
-                    "https://global-web-assets.cpcdn.com/assets/premium/premium_feature/hall_of_fame_recipes-c88c0c3e9b0a9baec1fcd84c066cc9c78eb79f44d4848ba4bac890e5e90e3786.webp"
-                  }
-                  href={"/"}
-                  text={"Top Món Có Nhiều Cooksnap Nhất"}
-                  description={"Công thức đã nhận được hơn 10 cooksnap"}
+                  src="https://global-web-assets.cpcdn.com/assets/premium/premium_feature/hall_of_fame_recipes-c88c0c3e9b0a9baec1fcd84c066cc9c78eb79f44d4848ba4bac890e5e90e3786.webp"
+                  href="/"
+                  text="Top Món Có Nhiều Cooksnap Nhất"
+                  description="Công thức đã nhận được hơn 10 cooksnap"
                 />
 
                 <RecipeCard
-                  src={
-                    "https://global-web-assets.cpcdn.com/assets/premium/premium_feature/meal_plans-682dc62344237d32f8878778b750c3d1df25892066375df420b5de4b6c24432f.webp"
-                  }
-                  href={"/"}
-                  text={"Thực Đơn Premium"}
-                  description={
-                    "Thực đơn hàng tuần với những nguyên liệu theo mùa"
-                  }
+                  src="https://global-web-assets.cpcdn.com/assets/premium/premium_feature/meal_plans-682dc62344237d32f8878778b750c3d1df25892066375df420b5de4b6c24432f.webp"
+                  href="/"
+                  text="Thực Đơn Premium"
+                  description="Thực đơn hàng tuần với những nguyên liệu theo mùa"
                 />
 
                 <RecipeCard
-                  src={
-                    "https://global-web-assets.cpcdn.com/assets/premium/premium_feature/access_rankings-a00e64c1f8635b8c1c34eaf988550afe8a389e92e5940ce77d5314833fdd5703.webp"
-                  }
-                  href={"/"}
-                  text={"Top Món Được Xem Nhiều Nhất"}
-                  description={
-                    "Những công thức có lượt xem nhiều nhất, cập nhật mỗi ngày"
-                  }
+                  src="https://global-web-assets.cpcdn.com/assets/premium/premium_feature/access_rankings-a00e64c1f8635b8c1c34eaf988550afe8a389e92e5940ce77d5314833fdd5703.webp"
+                  href="/"
+                  text="Top Món Được Xem Nhiều Nhất"
+                  description="Những công thức có lượt xem nhiều nhất, cập nhật mỗi ngày"
                 />
               </div>
             </section>

@@ -9,6 +9,7 @@ import { userContext } from "../context/UserContext";
 import { useParams } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
 import { toast } from "react-toastify";
+import ProfileSkeleton from "../components/ProfileSkeleton";
 function Profile() {
   const { user, setUser } = useContext(userContext);
   const [data, setData] = useState([]);
@@ -30,6 +31,7 @@ function Profile() {
     "rượu vodka(loại 40-50°) để lạnh",
     "lòng trắng trứng",
   ]);
+  const [isLoading, setIsLoading] = useState(false)
   const handleFollowing = async (targetId) => {
     try {
       const req = await axiosClient.post("/accounts/following", {
@@ -63,6 +65,7 @@ function Profile() {
     return `${hours} tiếng ${remainingMinutes} phút`;
   };
   useEffect(() => {
+    setIsLoading(true)
     const fetchData = async () => {
       try {
         const res = await axiosClient.get(`/accounts/${id}/profile`, {
@@ -72,12 +75,11 @@ function Profile() {
         setNewIngregients(res.data.ingreditents);
         setUserInfo(res.data.user);
         setData(res.data);
-        console.log(res.data);
-
         if (user && res.data.user._id === user.id) {
           setIsMe(true);
         }
         setFollowStatus(res.data.isFollowing);
+         setIsLoading(false)
       } catch (error) {
         console.error("Fetch profile error:", error);
       }
@@ -93,7 +95,11 @@ function Profile() {
   };
   return (
     <>
-      <div className="px-[16px] mx-auto w-[680px]">
+    {
+      isLoading && <ProfileSkeleton />
+    }
+      {
+        !isLoading && <div className="px-[16px] mx-auto w-[680px]">
         <div className="pt-[16px]">
           <div className="flex items-center gap-[8px]">
             <Link>
@@ -300,6 +306,7 @@ function Profile() {
           </div>
         </div> */}
       </div>
+      }
     </>
   );
 }
