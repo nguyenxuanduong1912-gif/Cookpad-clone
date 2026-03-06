@@ -5,6 +5,7 @@ import LoginCard from "./LoginCard";
 const MyGoogleButton = ({ setOpenLogin, setUser, localStorageData, color }) => {
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
+        console.log(tokenResponse)
       try {
         const res = await axiosClient.post("/accounts/loginGoogle", {
           token: tokenResponse.access_token,
