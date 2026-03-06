@@ -4,6 +4,7 @@ const Recipe = require("../../Models/recipes");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../../Helper/SendMail");
+const axios = require('axios')
 module.exports.register = async (req, res) => {
   try {
     const { fullName, email, password, phone, avatar, address } = req.body;
@@ -45,10 +46,15 @@ module.exports.register = async (req, res) => {
 };
 module.exports.loginByGoogle = async (req, res) => {
   try {
-    const { token } = req.body;
+    const { token } = req.body; 
 
-    const decoded = jwt.decode(token);
-    const { email, name, picture } = decoded;
+    const googleUser = await axios.get(
+      `https://www.googleapis.com/oauth2/v3/userinfo`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    const { email, name, picture } = googleUser.data;
     const existUser = await Account.findOne({ email, provider: "google" });
     if (!existUser) {
       const newUser = new Account({
@@ -81,7 +87,6 @@ module.exports.loginByGoogle = async (req, res) => {
         process.env.JWT_SUPERSECRET,
         { expiresIn: "1d" }
       );
-      console.log(existUser)
       res.status(200).json({
         message: "Đăng nhập thành công",
         token: tokenJwt,

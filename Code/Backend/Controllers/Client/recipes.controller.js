@@ -1315,10 +1315,9 @@ module.exports.similarSearch = async (req, res) => {
     const cleanKeyword = Helper.removeDiacritics(keyword.toLowerCase());
     const keywordLower = cleanKeyword.toLowerCase();
 
-    // 🔍 Tìm trong name, ingredients, seasonings, tags
+    // 🔍 Tìm trong ingredients và seasonings
     const recipes = await Recipe.find({
       $or: [
-        { name_normalized: { $regex: cleanKeyword, $options: "i" } },
         {
           "ingredients.name_normalized": {
             $regex: cleanKeyword,
@@ -1328,25 +1327,16 @@ module.exports.similarSearch = async (req, res) => {
         {
           "seasonings.name_normalized": { $regex: cleanKeyword, $options: "i" },
         },
-        { tags_normalized: { $regex: cleanKeyword, $options: "i" } },
       ],
       // status: "approved", // chỉ lấy món đã duyệt
     })
       .limit(100)
-      .select("name image tags ingredients seasonings")
+      .select("ingredients seasonings image")
       .lean();
 
     const suggestions = [];
 
     recipes.forEach((r) => {
-      // Tên món
-      if (
-        r.name &&
-        Helper.removeDiacritics(r.name).toLowerCase().includes(keywordLower)
-      ) {
-        suggestions.push({ text: r.name, image: r.image, score: 4 });
-      }
-
       // Nguyên liệu
       r.ingredients?.forEach((i) => {
         if (
@@ -1372,17 +1362,6 @@ module.exports.similarSearch = async (req, res) => {
           });
         }
       });
-
-      // Tag
-      r.tags?.forEach((t) => {
-        if (Helper.removeDiacritics(t).toLowerCase().includes(keywordLower)) {
-          suggestions.push({
-            text: t,
-            image: r.image,
-            score: 1,
-          });
-        }
-      });
     });
 
     // 🔢 Loại trùng & sắp xếp
@@ -1400,10 +1379,10 @@ module.exports.similarSearch = async (req, res) => {
     unique.sort((a, b) => b.score - a.score);
 
     res.status(200).json({
-      message: "Lấy gợi ý thành công",
+      message: "Lấy nguyên liệu và gia vị thành công",
       keyword,
       total: unique.length,
-      suggestions: unique.slice(0, 10), // ✅ Trả luôn text + image
+      suggestions: unique.slice(0, 10), // ✅ Chỉ trả text + image
     });
   } catch (error) {
     res.status(500).json({ message: "Lỗi server", error: error.message });

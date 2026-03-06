@@ -1,4 +1,4 @@
-const IngredientMapping = require("../models/ingredientsMapping");
+const IngredientMapping = require("../Models/ingredientsMapping");
 const translate = require("google-translate-api-x");
 const { INGREDIENT_MAP } = require("../Utils/TranslateToEnglish.json");
 
