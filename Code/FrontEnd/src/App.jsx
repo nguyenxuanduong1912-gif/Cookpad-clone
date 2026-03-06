@@ -36,6 +36,7 @@ import CategoriesList from "./pages/CategoriesList.jsx";
 import IngredientSuggest from "./pages/IngredientSuggestPage.jsx";
 import NutritionCategories from "./components/NutritionCategories.jsx";
 import NutritionCategoryPage from "./pages/NutritionCategoryPage.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 const router = createBrowserRouter([
   {
     path: "/",

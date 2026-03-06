@@ -21,9 +21,6 @@ function TagInput({ tags, setTags }) {
 
   return (
     <div className="my-4">
-      <label htmlFor="tags" className="block mb-2 font-semibold text-[#4A4A4A]">
-        Nhập tag để công thức được đề xuất nhiều hơn
-      </label>
       <div className="flex flex-wrap gap-2 mb-2">
         {tags.map((tag, index) => (
           <div

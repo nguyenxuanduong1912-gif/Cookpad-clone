@@ -1231,17 +1231,6 @@ function Header({
               <>
                 {!updateRecipe && (
                   <Button
-                    text={"Xóa"}
-                    px={"40px"}
-                    py={"8px"}
-                    icon={<img src="/bin.svg" />}
-                    textColor={"#FE463A"}
-                    borderColor="#FE463A"
-                    bold
-                  />
-                )}
-                {!updateRecipe && (
-                  <Button
                     text="Lưu và đóng"
                     px={"16px"}
                     py={"8px"}

@@ -351,7 +351,9 @@ function RecipesAdd() {
                     src={imgSrc}
                     onDelete={handleResetFile}
                     handlePreview={handlePreview}
-                    onReset={() => setFileKey(Date.now())}
+                    onReset={() => {
+                      setFileKey(Date.now())
+                    }}
                   />
                 </div>
               )}
@@ -469,7 +471,11 @@ function RecipesAdd() {
                   name="description"
                 />
               </div>
-              <TagInput tags={tags} setTags={setTags} />
+               <div className="w-full h-[16px] flex items-center justify-end text-[1.2rem] text-gray-400 mt-[2px]">
+                {getField("desc").numberVisible &&
+                  getField("desc").text.length + "/" + getField("desc").max}
+              </div>
+              {/* <TagInput tags={tags} setTags={setTags} /> */}
 
               {/* 2. CHỌN DANH MỤC */}
               <CategorySelector
@@ -477,10 +483,6 @@ function RecipesAdd() {
                 onChange={setCategoryForm}
                 required={true}
               />
-              <div className="w-full h-[16px] flex items-center justify-end text-[1.2rem] text-gray-400 mt-[2px]">
-                {getField("desc").numberVisible &&
-                  getField("desc").text.length + "/" + getField("desc").max}
-              </div>
             </div>
           </div>
 
@@ -901,7 +903,7 @@ function RecipesAdd() {
                                         </Link>
                                       </li>
 
-                                      {!step.link.url ? (
+                                      {/* {!step.link.url ? (
                                         <li
                                           className="p-[8px] text-center border-b"
                                           onClick={() => {
@@ -924,7 +926,7 @@ function RecipesAdd() {
                                             <span>Xóa nguồn dẫn</span>
                                           </Link>
                                         </li>
-                                      )}
+                                      )} */}
                                     </>
                                   </ul>
                                 </div>

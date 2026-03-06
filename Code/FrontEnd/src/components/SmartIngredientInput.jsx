@@ -277,7 +277,7 @@ export default function SmartIngredientInput() {
           </div>
 
           {/* AUTOCOMPLETE */}
-          {showSuggest && (
+          {/* {showSuggest && (
             <div className="absolute mt-2 w-full bg-white border border-orange-200 rounded-xl shadow-lg z-50 max-h-[200px] overflow-y-auto">
               {suggestions.map((s, i) => (
                 <div
@@ -294,7 +294,7 @@ export default function SmartIngredientInput() {
                 </div>
               ))}
             </div>
-          )}
+          )} */}
         </div>
 
         {/* POPULAR INGREDIENTS */}
@@ -305,7 +305,6 @@ export default function SmartIngredientInput() {
               "Thịt bò",
               "Thịt heo",
               "Thịt gà",
-              "Cá",
               "Tôm",
               "Trứng",
               "Khoai tây",

@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { userContext } from "../context/UserContext";
+import ScrollToTop from "../components/ScrollToTop";
 function MainLayout() {
   const { user, setUser } = useContext(userContext);
   const [recipes, setRecipes] = useState({
@@ -359,8 +360,9 @@ function MainLayout() {
     };
     fetchData();
   }, [user]);
-  return (
-    <div className="px-[6px]">
+  return <> 
+  <ScrollToTop />
+   <div className="px-[6px]">
       <div
         className={`${
           isOpen ? "grid grid-cols-12" : "flex"
@@ -451,7 +453,8 @@ function MainLayout() {
         </div>
       </div>
     </div>
-  );
+   
+   </>
 }
 
 export default MainLayout;

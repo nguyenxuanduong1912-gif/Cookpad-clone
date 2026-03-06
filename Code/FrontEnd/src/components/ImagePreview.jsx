@@ -5,7 +5,6 @@ function ImagePreview({
   handlePreview,
   onDelete,
   onReset,
-  setImageState,
 }) {
   const [open, setOpen] = useState(false);
   const [fileKey, setFileKey] = useState(Date.now());
@@ -16,8 +15,7 @@ function ImagePreview({
   const handleDelete = () => {
     const answer = confirm("Bạn có chắc chắn muốn xóa ảnh không?");
     if (answer) {
-      setImageState(true);
-      onDelete(null);
+      onDelete();
     }
   };
   return (
